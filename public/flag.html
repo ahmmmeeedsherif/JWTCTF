@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Protected Flag Page</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #1f1c2c, #928dab);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: #fff;
+    }
+    .container {
+      background: rgba(0, 0, 0, 0.6);
+      padding: 30px;
+      border-radius: 12px;
+      width: 350px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.4);
+      animation: fadeIn 1s ease;
+      text-align: center;
+    }
+    h1 {
+      margin-bottom: 10px;
+      font-weight: bold;
+      font-size: 24px;
+      color: #f0db4f;
+    }
+    #greeting {
+      font-size: 18px;
+      margin-bottom: 20px;
+      color: #f0db4f;
+      font-weight: 600;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #f0db4f;
+      border: none;
+      border-radius: 8px;
+      color: #1f1c2c;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 15px;
+    }
+    button:hover {
+      background: #fff172;
+    }
+    @keyframes fadeIn {
+      from {opacity: 0; transform: translateY(20px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Protected Flag Page</h1>
+    <div id="greeting">Hello, Guest!</div>
+    <button onclick="getFlag()">Get Flag</button>
+  </div>
+
+  <script>
+    function base64UrlDecode(str) {
+      str = str.replace(/-/g, '+').replace(/_/g, '/');
+      while (str.length % 4) {
+        str += '=';
+      }
+      try {
+        return atob(str);
+      } catch {
+        return null;
+      }
+    }
+
+    function getUsernameFromToken(token) {
+      if (!token) return null;
+      const parts = token.split('.');
+      if (parts.length !== 3) return null;
+      const payload = base64UrlDecode(parts[1]);
+      if (!payload) return null;
+      try {
+        const obj = JSON.parse(payload);
+        return obj.username || null;
+      } catch {
+        return null;
+      }
+    }
+
+    function updateGreeting() {
+      const token = localStorage.getItem('token');
+      const username = getUsernameFromToken(token);
+      const greetingEl = document.getElementById('greeting');
+      if (username) {
+        greetingEl.textContent = `Hello, ${username}!`;
+      } else {
+        greetingEl.textContent = 'Hello, Guest!';
+      }
+    }
+
+    function getFlag() {
+      const token = localStorage.getItem('token');
+
+      fetch('/flag', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ token })
+      })
+      .then(res => res.json())
+      .then(data => {
+        alert(data.flag || data.message)
+      });
+    }
+
+    updateGreeting();
+  </script>
+</body>
+</html>
